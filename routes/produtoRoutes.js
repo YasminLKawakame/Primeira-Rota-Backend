@@ -1,17 +1,17 @@
 import express from "express";
 import { cadastrarProduto, 
     listarProdutos,
-    BuscarProdutoPorId,
+    buscarProdutoPorID,
     atualizarProduto,
-    deletarProduto 
+    excluirProduto 
 } from "../controller/produtoController.js"; 
 
 const router = express.Router();
 
 router.post("/", cadastrarProduto);
 router.get("/", listarProdutos);
-router.get("/:id", BuscarProdutoPorId);
+router.get("/:id", buscarProdutoPorID);
 router.patch("/:id", atualizarProduto);
-router.delete("/:id", deletarProduto);
+router.delete("/:id", excluirProduto);
 
 export default router;

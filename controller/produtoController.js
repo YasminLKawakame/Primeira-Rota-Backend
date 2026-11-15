@@ -1,119 +1,74 @@
-import {Produto} from "../model/Produto.js"
-import { atualizar, cadastrar, listar, deletar, buscarPorId  } from "../repository/produtoRepository.js"
+import { Produto } from "../model/Produto.js";
 
-export async function cadastrarProduto (req, res){
-    try{
-    const {descricao, preco, peso} = req.body;
+import {
+    cadastrarProduto as salvarProduto,
+    listarProduto as listar,
+    buscarProdutoPorIndice,
+    atualizarProduto as atualizar,
+    excluirProduto as excluir
+} from "../repository/produtoRepository.js";
 
-    if(!descricao || !preco || !peso){
-        return res.status(400).json({
-            mensagem: "Descrição, preço e peso são obrigatórias"
-        });
-    }
-    
-    const produto = new Produto(descricao, preco, peso);
+export function cadastrarProduto(nome, preco, quantidade) {
+    const produto = new Produto(nome, preco, quantidade);
 
-    const id = await cadastrar(produto);
+    salvarProduto(produto);
 
-    res.status(201).json({
-        mensagem:"Produto cadastrado com sucesso",
-        id_produto: id
-    });
-    }catch (erro){
-        res.status(500).json({
-            mensagem:"Erro ao cadastrar produto: " + erro
-        })
+    console.log("Produto cadastrado com sucesso.");
+}
+
+export function listarProdutos() {
+    const lista = listar();
+
+    console.log("\n======== Lista de Produtos ========");
+
+    for (let i = 0; i < lista.length; i++) {
+        console.log("Índice:", i);
+        console.log("Nome:", lista[i].nome);
+        console.log("Preço:", lista[i].preco);
+        console.log("Quantidade:", lista[i].quantidade);
+        console.log("----------------------");
     }
 }
 
-export async function listarProdutos (req, res){
-    try{
-    const listaDeProdutos = await listar();
+export function buscarProdutoPorID(indice) {
+    const produto = buscarProdutoPorIndice(indice);
 
-    res.status(200).json(listaDeProdutos);
-    }catch(erro){
-        res.status(500).json({
-            mensagem:"Erro ao listar produtos: " + erro
-        })
+    if (produto === undefined) {
+        console.log("Produto não encontrado.");
+        return;
     }
+
+    console.log("Produto encontrado:");
+    console.log("Nome:", produto.nome);
+    console.log("Preço:", produto.preco);
+    console.log("Quantidade:", produto.quantidade);
 }
 
-export async function BuscarProdutoPorId(req, res){
-    try{
-    const id = Number(req.params.id);
 
-    const produto = await buscarPorId(id);
+export function atualizarProduto(indice, nome, preco, quantidade) {
+    const produtoEncontrado = buscarProdutoPorIndice(indice);
 
-    if(!produto){
-        return res.status(404).json({mensagem: "Produto não encontrado"})
+    if (produtoEncontrado === undefined) {
+        console.log("Produto não encontrado.");
+        return;
     }
 
-    res.status(200).json(produto);
-    }catch(erro){
-        res.status(500).json({
-            mensagem:"Erro ao listar produto por ID: " + erro
-        })
-    }
+    const produto = new Produto(nome, preco, quantidade);
+
+    atualizar(indice, produto);
+
+    console.log("Produto atualizado com sucesso.");
 }
 
-export async function atualizarProduto (req, res){
-    try{
-    const id = Number(req.params.id);
+export function excluirProduto(indice) {
+    const produto = buscarProdutoPorIndice(indice);
 
-    const produto = await buscarPorId(id);
-
-    if(!produto){
-        return res.status(404).json({mensagem: "Produto não encontrado"});
+    if (produto === undefined) {
+        console.log("Produto não encontrado.");
+        return;
     }
 
-    const {descricao, preco, peso} = req.body;
+    excluir(indice);
 
-    if(descricao != undefined){
-        produto.descricao = descricao;
-    }
-
-    if(preco != undefined){
-        produto.preco = preco;
-    }
-
-    if(peso != undefined){
-        produto.peso = peso;
-    }
-
-    const resultado = await atualizar(id,produto);
-
-    if(resultado === 0){
-        return res.status(404).json({
-            mensagem:"Erro ao atualizar produto, nenhum produto atualizado"
-        })
-    }
-
-    res.status(200).json({mensagem: "Produto atualizado com sucesso"})
-    }catch(erro){
-        return res.status(500).json({
-            mensagem:"Erro ao atualizar produto: " + erro
-        });
-    }
-}
-
-export async function deletarProduto(req, res){
-    try{
-    const id = Number(req.params.id);
-
-    const produto = await buscarPorId(id);
-
-    if(!produto){
-        return res.status(404).json({mensagem: "Produto não encontrato"});
-    }
-
-    const resultado = await deletar(id);
-
-    if(resultado === 0){
-        return res.status(404).json({mensagem: "Nenhum Produto deletado"});
-    }
-
-    res.status(204);
-    }catch(erro){
-        return res.status(500).json({mensagem: "Erro ao deletar produto: " + erro});
-    }
+    console.log("Produto excluído com sucesso.");
 }

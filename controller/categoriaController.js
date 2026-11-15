@@ -1,115 +1,77 @@
-import {Categoria} from "../model/Categoria.js"
-import { atualizar, cadastrar, listar, deletar, buscarPorId  } from "../repository/categoriaRepository.js"
+import { Categoria } from "../model/Categoria.js";
 
-export async function cadastrarCategoria (req, res){
-    try{
-    const {nome, descricao} = req.body;
+import {
+    cadastrarCategoria as salvarCategoria,
+    listarCategorias as listar,
+    buscarCategoriaPorIndice,
+    atualizarCategoria as atualizar,
+    excluirCategoria as excluir
+} from "../repository/categoriaRepository.js";
 
-    if(!nome || !descricao){
-        return res.status(400).json({
-            mensagem: "Nome e descrição são obrigatórios"
-        });
-    }
-    
-    const categoria = new Categoria(nome, descricao);
+export function cadastrarCategoria(req, res) {
+    const categoria = new Categoria(req.body.nome, req.body.descricao);
 
-    const id = await cadastrar(categoria);
+    salvarCategoria(categoria);
 
-    res.status(201).json({
-        mensagem:"Categoria cadastrada com sucesso",
-        id_categoria: id
-    });
-    }catch (erro){
-        res.status(500).json({
-            mensagem:"Erro ao cadastrar categoria: " + erro
-        })
-    }
+    return res.status(201).json({ mensagem: "Categoria cadastrada com sucesso." });
 }
 
-export async function listarCategorias (req, res){
-    try{
-    const listaDeCategorias = await listar();
+export function listarCategorias(req, res) {
+    const lista = listar();
 
-    res.status(200).json(listaDeCategorias);
-    }catch(erro){
-        res.status(500).json({
-            mensagem:"Erro ao listar categorias: " + erro
-        })
+    console.log("\n======== Lista de Categorias ========");
+
+    for (let i = 0; i < lista.length; i++) {
+        console.log("Índice:", i);
+        console.log("Nome:", lista[i].nome);
+        console.log("Descrição:", lista[i].descricao);
+        console.log("----------------------");
     }
+
+    return res.status(200).json(lista);
 }
 
-export async function buscarCategoriaPorId(req, res){
-    try{
-    const id = Number(req.params.id);
+export function buscarCategoriaPorID(req, res) {
+    const indice = Number(req.params.id);
+    const categoria = buscarCategoriaPorIndice(indice);
 
-    const categoria = await buscarPorId(id);
-
-    if(!categoria){
-        return res.status(404).json({mensagem: "Categoria não encontrada"})
+    if (categoria === undefined) {
+        return res.status(404).json({ mensagem: "Categoria não encontrada." });
     }
 
-    res.status(200).json(categoria);
-    }catch(erro){
-        res.status(500).json({
-            mensagem:"Erro ao buscar categoria por ID: " + erro
-        })
-    }
+    return res.status(200).json(categoria);
 }
 
-export async function atualizarCategoria (req, res){
-    try{
-    const id = Number(req.params.id);
+export function atualizarCategoria(req, res) {
+    const indice = Number(req.params.id);
+    const categoriaEncontrada = buscarCategoriaPorIndice(indice);
 
-    const categoria = await buscarPorId(id);
-
-    if(!categoria){
-        return res.status(404).json({mensagem: "Categoria não encontrada"});
+    if (categoriaEncontrada === undefined) {
+        return res.status(404).json({ mensagem: "Categoria não encontrada." });
     }
 
-    const {nome, descricao} = req.body;
+    const { nome, descricao } = req.body;
 
-    if(nome != undefined){
-        categoria.nome = nome;
+    if (nome !== undefined) {
+        categoriaEncontrada.nome = nome;
     }
-
-    if(descricao != undefined){
-        categoria.descricao = descricao;
+    if (descricao !== undefined) {
+        categoriaEncontrada.descricao = descricao;
     }
+    atualizar(indice, categoriaEncontrada);
 
-    const resultado = await atualizar(id,categoria);
-
-    if(resultado === 0){
-        return res.status(404).json({
-            mensagem:"Erro ao atualizar categoria, nenhuma categoria atualizada"
-        })
-    }
-
-    res.status(200).json({mensagem: "Categoria atualizada com sucesso"})
-    }catch(erro){
-        return res.status(500).json({
-            mensagem:"Erro ao atualizar categoria: " + erro
-        });
-    }
+    return res.status(200).json({ mensagem: "Categoria atualizada com sucesso." });
 }
 
-export async function deletarCategoria(req, res){
-    try{
-    const id = Number(req.params.id);
+export function excluirCategoria(req, res) {
+    const indice = Number(req.params.id);
+    const categoria = buscarCategoriaPorIndice(indice);
 
-    const categoria = await buscarPorId(id);
-
-    if(!categoria){
-        return res.status(404).json({mensagem: "Categoria não encontrada"});
+    if (categoria === undefined) {
+        return res.status(404).json({ mensagem: "Categoria não encontrada." });
     }
 
-    const resultado = await deletar(id);
+    excluir(indice);
 
-    if(resultado === 0){
-        return res.status(404).json({mensagem: "Nenhuma categoria deletada"});
-    }
-
-    res.status(204).send();
-    }catch(erro){
-        return res.status(500).json({mensagem: "Erro ao deletar categoria: " + erro});
-    }
+    return res.status(204).send();
 }
